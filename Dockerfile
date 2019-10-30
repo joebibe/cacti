@@ -20,3 +20,7 @@ RUN \
 ## --- CRON ---
 # Fix cron issues - https://github.com/CentOS/CentOS-Dockerfiles/issues/31
 RUN sed -i '/session required pam_loginuid.so/d' /etc/pam.d/crond
+
+## --- SCRIPTS ---
+COPY cmd.php /cmd.php
+RUN chmod +x /cmd.php
