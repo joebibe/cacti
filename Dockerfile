@@ -1,24 +1,31 @@
-FROM centos:7
-MAINTAINER Joseph Mbengue (mbenguejoseph@gmail.com)
-ADD . /go/src/cacti-app
+FROM debian:9
+MAINTAINER Joseph Mbengue <mbenguejoseph@gmail.com>
 
-## --- CACTI ---
-RUN \
-    rpm --rebuilddb && yum clean all && \
-    yum update -y && \
-    yum install -y \
-        rrdtool net-snmp net-snmp-utils cronie php-ldap php-devel mysql php \
-        ntp bison php-cli php-mysql php-common php-mbstring php-snmp curl \
-        php-gd openssl openldap mod_ssl php-pear net-snmp-libs php-pdo \
-        autoconf automake gcc gzip help2man libtool make net-snmp-devel \
-        m4 libmysqlclient-devel libmysqlclient openssl-devel dos2unix wget \
-        sendmail mariadb-devel which && \
-    yum clean all
 
-## --- CRON ---
-# Fix cron issues - https://github.com/CentOS/CentOS-Dockerfiles/issues/31
-RUN sed -i '/session required pam_loginuid.so/d' /etc/pam.d/crond
+ENV DB_USER=root \
+    DB_PASS=password \
+    DB_ADDRESS=127.0.0.1 \
+    SPINE_VERSION=latest \
+    CACTI_COMMIT_HASH=dfba135dbd84f93f30704da824fa52a7df272b65 \
+    TIMEZONE=UTC
 
-## --- SCRIPTS ---
-COPY cmd.php /cmd.php
-RUN chmod +x /cmd.php
+RUN apt-get update -yq \
+    && apt-get install rrdtool net-snmp net-snmp-devel net-snmp-utils mariadb-devel cronie -yq \
+    && git clone https://github.com/Cacti/cacti.git /cacti/ -yq \
+    && cd cacti -yq \
+    && git checkout ${CACTI_COMMIT_HASH} -yq \
+    && curl -o /tmp/cacti-spine.tgz http://www.cacti.net/downloads/spine/cacti-spine-${SPINE_VERSION}.tar.gz -yq \
+    && mkdir -p /tmp/spine -yq \
+    && tar zxvf /tmp/cacti-spine.tgz -C /tmp/spine --strip-components=1 -yq \
+    && rm -f /tmp/cacti-spine.tgz -yq \
+    && cd /tmp/spine/ -yq \
+    && ./configure -yq \
+    && make -yq \
+    && make install -yq \
+    && rm -rf /tmp/spine -yq \
+    && apt-get remove gcc mariadb-devel net-snmp-devel -yq \
+    && apt-get clean -y
+
+COPY container-files /
+
+EXPOSE 80 81 443
