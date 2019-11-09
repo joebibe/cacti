@@ -1,9 +1,6 @@
 FROM centos:7
 MAINTAINER Joseph Mbengue (mbenguejoseph@gmail.com)
 
-## --- SUPPORTING FILES ---
-COPY cacti /cacti_install
-
 ## --- CACTI ---
 RUN \
     rpm --rebuilddb && yum clean all && \
