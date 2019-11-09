@@ -2,9 +2,6 @@ FROM centos:7
 MAINTAINER Joseph Mbengue (mbenguejoseph@gmail.com)
 ADD . /go/src/cacti-app
 
-## --- SUPPORTING FILES ---
-COPY --from=0 /go/bin/cacti-app
-
 ## --- CACTI ---
 RUN \
     rpm --rebuilddb && yum clean all && \
